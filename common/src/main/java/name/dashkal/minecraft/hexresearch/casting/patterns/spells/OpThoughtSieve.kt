@@ -1,31 +1,31 @@
 package name.dashkal.minecraft.hexresearch.casting.patterns.spells
 
-import at.petrak.hexcasting.api.PatternRegistry
 import at.petrak.hexcasting.api.misc.MediaConstants
 import at.petrak.hexcasting.api.mod.HexConfig
-import at.petrak.hexcasting.api.spell.ParticleSpray
-import at.petrak.hexcasting.api.spell.RenderedSpell
-import at.petrak.hexcasting.api.spell.SpellAction
-import at.petrak.hexcasting.api.spell.casting.CastingContext
-import at.petrak.hexcasting.api.spell.getEntity
-import at.petrak.hexcasting.api.spell.iota.Iota
-import at.petrak.hexcasting.api.spell.iota.PatternIota
-import at.petrak.hexcasting.api.spell.math.HexPattern
-import at.petrak.hexcasting.api.spell.mishaps.MishapBadEntity
+import at.petrak.hexcasting.api.casting.ParticleSpray
+import at.petrak.hexcasting.api.casting.RenderedSpell
+import at.petrak.hexcasting.api.casting.castables.SpellAction
+import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
+import at.petrak.hexcasting.api.casting.getEntity
+import at.petrak.hexcasting.api.casting.iota.Iota
+import at.petrak.hexcasting.api.casting.iota.PatternIota
+import at.petrak.hexcasting.api.casting.math.HexPattern
+import at.petrak.hexcasting.api.casting.mishaps.MishapBadCaster
+import at.petrak.hexcasting.api.casting.mishaps.MishapBadEntity
 import at.petrak.hexcasting.common.entities.EntityWallScroll
-import at.petrak.hexcasting.common.items.ItemScroll
-import at.petrak.hexcasting.common.misc.Brainsweeping
+import at.petrak.hexcasting.common.items.storage.ItemScroll
+import at.petrak.hexcasting.api.HexAPI
 import name.dashkal.minecraft.hexresearch.HexResearch
 import name.dashkal.minecraft.hexresearch.casting.mishaps.MishapNotPerWorldPattern
 import name.dashkal.minecraft.hexresearch.casting.mishaps.MishapNotScroll
 import name.dashkal.minecraft.hexresearch.effect.MindFatigueEffect
+import name.dashkal.minecraft.hexresearch.hexcompat.PerWorldPatternResolver
+import name.dashkal.minecraft.hexresearch.hexcompat.ScrollPatternReader
 import name.dashkal.minecraft.hexresearch.mindharm.MindHarmLogic
 import name.dashkal.minecraft.hexresearch.network.Networking
 import name.dashkal.minecraft.hexresearch.util.Either
-import name.dashkal.minecraft.hexresearch.util.HexPatternMatch
 import name.dashkal.minecraft.hexresearch.util.Right
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
@@ -42,13 +42,13 @@ class OpThoughtSieve : SpellAction {
     override val argc = 2
 
     /** Cost is 50 dust */
-    val cost: Int = 50 * MediaConstants.DUST_UNIT
+    val cost: Long = 50L * MediaConstants.DUST_UNIT.toLong()
 
     private val logger = HexResearch.LOGGER;
 
-    override fun execute(args: List<Iota>, ctx: CastingContext): Triple<RenderedSpell, Int, List<ParticleSpray>> {
-        val villager = args.getEntity(0, argc)
-        val scrollEntity = args.getEntity(1, argc)
+    override fun execute(args: List<Iota>, ctx: CastingEnvironment): SpellAction.Result {
+        val villager = args.getEntity(ctx.world, 0, argc)
+        val scrollEntity = args.getEntity(ctx.world, 1, argc)
 
         // Ambit checks
         ctx.assertEntityInRange(villager)
@@ -64,8 +64,9 @@ class OpThoughtSieve : SpellAction {
         val perWorldPattern = findPerWorldPattern(ctx, pattern)
 
         // The requirements are met.  Pay the cost and invoke the spell.
-        return Triple(
-            Spell(villager, ctx.caster, scroll, perWorldPattern),
+        val caster = ctx.castingEntity as? ServerPlayer ?: throw MishapBadCaster()
+        return SpellAction.Result(
+            Spell(villager, caster, scroll, perWorldPattern),
             cost,
             listOf(
                 ParticleSpray.burst(villager.position(), 1.0),
@@ -79,7 +80,7 @@ class OpThoughtSieve : SpellAction {
      *
      * A valid scroll is either an ItemStack containing a Scroll item, or a EntityWallScroll (a hanging scroll).
      */
-    private fun checkScroll(ctx: CastingContext, scrollEntity: Entity): Pair<TargetScroll, HexPattern> {
+    private fun checkScroll(ctx: CastingEnvironment, scrollEntity: Entity): Pair<TargetScroll, HexPattern> {
         logger.debug("OpThoughtSieve.checkScroll")
         val (targetEntity, itemStack) = when (scrollEntity) {
             is ItemEntity -> {
@@ -95,10 +96,10 @@ class OpThoughtSieve : SpellAction {
 
         val item = itemStack.item
         if (item is ItemScroll) {
-            val iota = item.readIota(itemStack, ctx.world)
-            if (iota is PatternIota) {
-                logger.debug("OpThoughtSieve.checkScroll: Found Pattern: ${iota.pattern}")
-                return Pair(TargetScroll(targetEntity, itemStack, item), iota.pattern)
+            val pattern = ScrollPatternReader.read(itemStack, ctx.world)
+            if (pattern != null) {
+                logger.debug("OpThoughtSieve.checkScroll: Found Pattern: $pattern")
+                return Pair(TargetScroll(targetEntity, itemStack, item), pattern)
             }
         }
 
@@ -110,19 +111,13 @@ class OpThoughtSieve : SpellAction {
      *
      * If found, returns it.  If not, mishaps.
      */
-    private fun findPerWorldPattern(ctx: CastingContext, pattern: HexPattern): HexPattern {
+    private fun findPerWorldPattern(ctx: CastingEnvironment, pattern: HexPattern): HexPattern {
         logger.debug("OpThoughtSieve.findPerWorldPattern")
 
-        // Brittle warning.  This method is marked "Internal use only."
-        val lookup = PatternRegistry.getPerWorldPatterns(ctx.world)
-
-        // Search for a match among all great spells
-        for (entry in lookup.entries) {
-            val perWorldPattern = HexPattern.fromAngles(entry.key, entry.value.second)
-            if (HexPatternMatch.shapeMatches(pattern, perWorldPattern)) {
-                logger.debug("OpThoughtSieve.findPerWorldPattern: Found $perWorldPattern")
-                return perWorldPattern
-            }
+        val perWorldPattern = PerWorldPatternResolver.find(ctx.world, pattern)
+        if (perWorldPattern != null) {
+            logger.debug("OpThoughtSieve.findPerWorldPattern: Found $perWorldPattern")
+            return perWorldPattern
         }
         logger.debug("OpThoughtSieve.findPerWorldPattern: Did not find anything")
         throw MishapNotPerWorldPattern()
@@ -134,11 +129,11 @@ class OpThoughtSieve : SpellAction {
     private data class Spell(val villager: Villager, val caster: ServerPlayer, val targetScroll: TargetScroll, val perWorldPattern: HexPattern) : RenderedSpell {
         private val logger: Logger = HexResearch.LOGGER
 
-        override fun cast(ctx: CastingContext) {
+        override fun cast(ctx: CastingEnvironment) {
             // This counts as "mind murder" and should follow HexCasting's configuration for that
             if (HexConfig.server().doVillagersTakeOffenseAtMindMurder()) {
                 logger.debug("OpThoughtSieve.Spell.cast: Broadcasting mind murder")
-                villager.tellWitnessesThatIWasMurdered(ctx.caster)
+                villager.gossips.decay()
             }
 
             // Roll for mind harm before checking for success, as it might de-rank the villager and so affect chances
@@ -146,19 +141,19 @@ class OpThoughtSieve : SpellAction {
             rollMindHarm()
 
             // If the villager has mind fatigue, apply additional harm without a roll
-            if (villager.hasEffect(MindFatigueEffect.getInstance())) {
+            if (villager.activeEffects.any { it.effect.value() == MindFatigueEffect.getInstance() }) {
                 logger.debug("OpThoughtSieve.Spell.cast: Mind Fatigue present, doing extra harm")
                 MindHarmLogic.doRandomHarm(caster, villager)
             }
 
             // If the first harm(s) killed or brainswept the villager, we're done.
-            if (!villager.isDeadOrDying && !Brainsweeping.isBrainswept(villager)) {
+            if (!villager.isDeadOrDying && !HexAPI.instance().isBrainswept(villager)) {
                 logger.debug("OpThoughtSieve.Spell.cast: Checking for success")
                 if (checkSuccess()) {
                     logger.debug("OpThoughtSieve.Spell.cast: Success")
                     fillInTargetScroll(ctx)
                     // Give the advancement
-                    ctx.world.server.advancements.getAdvancement(ResourceLocation(HexResearch.MOD_ID, "enlightened_thought_sieve"))
+                    ctx.world.server.advancements.get(HexResearch.id("enlightened_thought_sieve"))
                         ?.let { caster.advancements.award(it, "cast_spell") }
                     // 30 seconds of mind fatigue
                     logger.debug("OpThoughtSieve.Spell.cast: Applying Mind Fatigue")
@@ -174,9 +169,8 @@ class OpThoughtSieve : SpellAction {
         }
 
         /** Rewrite the target scroll with the exact pattern for this world */
-        private fun fillInTargetScroll(ctx: CastingContext) {
+        private fun fillInTargetScroll(ctx: CastingEnvironment) {
             logger.debug("OpThoughtSieve.Spell.cast: Redrawing scroll")
-            targetScroll.itemStack.removeTagKey(ItemScroll.TAG_PATTERN)
             targetScroll.item.writeDatum(targetScroll.itemStack, PatternIota(perWorldPattern))
 
             // If a wall scroll, force it to redraw

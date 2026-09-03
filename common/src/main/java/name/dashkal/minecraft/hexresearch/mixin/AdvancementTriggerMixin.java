@@ -1,7 +1,7 @@
 package name.dashkal.minecraft.hexresearch.mixin;
 
 import name.dashkal.minecraft.hexresearch.registry.HRAdvancementTriggers;
-import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,21 +11,26 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * Mixin used to hook into advancement grants, enabling the "hexresearch:advancement" advancement trigger.
- */
+/** Hooks advancement completion for the {@code hexresearch:advancement} criterion. */
 @Mixin(PlayerAdvancements.class)
 public abstract class AdvancementTriggerMixin {
-    @Inject(at = @At("RETURN"), method = "award(Lnet/minecraft/advancements/Advancement;Ljava/lang/String;)Z")
-    private void award(Advancement advancement, String string, CallbackInfoReturnable<Boolean> cir) {
-        if (getOrStartProgress(advancement).isDone()) {
-            HRAdvancementTriggers.ADVANCEMENT_TRIGGER.trigger(player, advancement.getId());
-        }
-    }
-
     @Shadow
     private ServerPlayer player;
 
     @Shadow
-    public abstract AdvancementProgress getOrStartProgress(Advancement advancement);
+    public abstract AdvancementProgress getOrStartProgress(AdvancementHolder advancement);
+
+    @Inject(
+            method = "award(Lnet/minecraft/advancements/AdvancementHolder;Ljava/lang/String;)Z",
+            at = @At("RETURN")
+    )
+    private void hexresearch$onAward(
+            AdvancementHolder advancement,
+            String criterion,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (cir.getReturnValue() && getOrStartProgress(advancement).isDone()) {
+            HRAdvancementTriggers.ADVANCEMENT_TRIGGER.trigger(player, advancement.id());
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package name.dashkal.minecraft.hexresearch.xplat;
 
 import name.dashkal.minecraft.hexresearch.effect.MindFatigueEffect;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
 
 import java.util.SortedSet;
@@ -44,4 +46,7 @@ public abstract class XPlatAPI {
      * @param gameTime the current game time as per `Level.getGameTime()`
      */
     public abstract void cognitiveInducerPruneMarks(Villager villager, long gameTime);
+
+    /** Sends a clientbound payload using the active loader implementation. */
+    public abstract void sendPacketToPlayer(ServerPlayer player, CustomPacketPayload payload);
 }

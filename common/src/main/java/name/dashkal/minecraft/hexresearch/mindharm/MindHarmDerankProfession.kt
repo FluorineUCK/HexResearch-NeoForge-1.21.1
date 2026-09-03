@@ -10,7 +10,7 @@ import kotlin.math.min
 
 /** The villager loses a rank in their profession, falling to a Nitwit if they lose their last trade. */
 class MindHarmDerankProfession : MindHarmMechanic {
-    override fun getId(): ResourceLocation = ResourceLocation(HexResearch.MOD_ID, "mindharm_derank")
+    override fun getId(): ResourceLocation = HexResearch.id("mindharm_derank")
 
     override fun getSeverity(): MindHarmSeverity = MindHarmSeverity.PERMANENT_MINOR
 
@@ -31,7 +31,7 @@ class MindHarmDerankProfession : MindHarmMechanic {
             val toRemove = min(
                 villager.offers.size,
                 min(
-                    Villager.TRADES_PER_LEVEL,
+                    2,
                     VillagerTrades.TRADES[villager.villagerData.profession]?.get(rank)?.size ?: 0
                 )
             )

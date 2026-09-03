@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -66,15 +66,14 @@ public class CognitiveInducerBlock extends AbstractBlockEntityBlock<CognitiveInd
     @SuppressWarnings("deprecation")
     @Nonnull
     @Override
-    public InteractionResult use(@Nonnull BlockState blockState, @Nonnull Level level, @Nonnull BlockPos blockPos, @Nonnull Player player, @Nonnull InteractionHand interactionHand, @Nonnull BlockHitResult blockHitResult) {
+    protected ItemInteractionResult useItemOn(@Nonnull ItemStack item, @Nonnull BlockState blockState, @Nonnull Level level, @Nonnull BlockPos blockPos, @Nonnull Player player, @Nonnull InteractionHand interactionHand, @Nonnull BlockHitResult blockHitResult) {
         return withBlockEntityF(level, blockPos, mcbe -> {
-            ItemStack item = player.getItemInHand(interactionHand);
             if (MediaHelper.isMediaItem(item)) {
-                return mcbe.insertMedia(item, false) ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
+                return mcbe.insertMedia(item, false) ? ItemInteractionResult.SUCCESS : ItemInteractionResult.CONSUME;
             } else {
-                return InteractionResult.PASS;
+                return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             }
-        }).orElse(InteractionResult.PASS);
+        }).orElse(ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION);
     }
 
     @SuppressWarnings("deprecation")

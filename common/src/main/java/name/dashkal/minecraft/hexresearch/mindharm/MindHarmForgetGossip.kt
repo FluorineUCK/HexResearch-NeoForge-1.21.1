@@ -9,7 +9,7 @@ import net.minecraft.world.entity.npc.Villager
  * The villager forgets a random gossip entry.
  */
 class MindHarmForgetGossip : MindHarmMechanic {
-    override fun getId(): ResourceLocation = ResourceLocation(HexResearch.MOD_ID, "mindharm_forget_gossip")
+    override fun getId(): ResourceLocation = HexResearch.id("mindharm_forget_gossip")
 
     override fun getSeverity(): MindHarmSeverity = MindHarmSeverity.REVERSIBLE
 

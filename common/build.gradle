@@ -1,14 +1,12 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
 }
 archivesBaseName = getArtifactId("common")
 
 architectury {
-    common(project.enabledPlatforms.split(","))
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/hexresearch.accesswidener")
+    common(project.enabledPlatforms.split(",")) {
+        it.platformPackage "neoforge", "forge"
+    }
 }
 
 repositories {
@@ -16,9 +14,6 @@ repositories {
 }
 
 dependencies {
-    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
-    // Do NOT use other classes from fabric loader
-    modImplementation "net.fabricmc:fabric-loader:${project.fabricLoaderVersion}"
     modApi "dev.architectury:architectury:${project.architecturyVersion}"
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
@@ -27,15 +22,10 @@ dependencies {
     // mixin extras
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixinExtrasVersion}"))
 
-    modCompileOnly "at.petra-k.paucal:paucal-common-$minecraftVersion:$paucalVersion"
-    modCompileOnly "at.petra-k.hexcasting:hexcasting-fabric-$minecraftVersion:$hexcastingVersion"
-    modCompileOnly "vazkii.patchouli:Patchouli-xplat:$minecraftVersion-$patchouliVersion"
-    modCompileOnly "maven.modrinth:hexgloop:$minecraftVersion-$hexgloopVersion-fabric"
-    modCompileOnly "maven.modrinth:wnboi:$wnboiVersion-fabric"
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.1'
-    testRuntimeOnly "at.petra-k.hexcasting:hexcasting-fabric-$minecraftVersion:$hexcastingVersion"
+    compileOnly files(rootProject.file("hexcasting-neoforge-${minecraftVersion}-${hexcastingVersion}.jar"))
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testCompileOnly files(rootProject.file("hexcasting-neoforge-${minecraftVersion}-${hexcastingVersion}.jar"))
+    testRuntimeOnly files(rootProject.file("hexcasting-neoforge-${minecraftVersion}-${hexcastingVersion}.jar"))
 }
 
 test {

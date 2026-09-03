@@ -7,11 +7,11 @@ import name.dashkal.minecraft.hexresearch.config.ClientConfig;
 import name.dashkal.minecraft.hexresearch.config.CommonConfig;
 import name.dashkal.minecraft.hexresearch.config.HexResearchConfig;
 import name.dashkal.minecraft.hexresearch.config.ServerConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,22 +22,22 @@ import java.util.concurrent.atomic.AtomicReference;
  * Forge implementation of Hex Research configuration
  */
 public class HexResearchConfigForgeImpl extends HexResearchConfig {
-    public static void init() {
-        HexResearchConfigForgeImpl config = new HexResearchConfigForgeImpl();
+    public static void init(IEventBus bus, ModContainer container) {
+        HexResearchConfigForgeImpl config = new HexResearchConfigForgeImpl(container);
         HexResearchConfig.instance = config;
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(config::onModConfigLoad);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(config::onModConfigReload);
+        bus.addListener(config::onModConfigLoad);
+        bus.addListener(config::onModConfigReload);
     }
 
     private final ServerConfigSpec serverConfigSpec;
 
     private final AtomicReference<ServerConfig> serverConfig = new AtomicReference<>();
 
-    public HexResearchConfigForgeImpl() {
+    public HexResearchConfigForgeImpl(ModContainer container) {
         this.serverConfigSpec = new ServerConfigSpec();
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, serverConfigSpec.spec);
+        container.registerConfig(ModConfig.Type.SERVER, serverConfigSpec.spec);
     }
 
     @Nullable
@@ -80,19 +80,19 @@ public class HexResearchConfigForgeImpl extends HexResearchConfig {
 
     private static class ServerConfigSpec {
         private static final ServerConfig DEFAULT = ServerConfig.getDefault();
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_IMPRESSION_COST_DUST;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_IMPRESSION_MARK_EXPIRATION_SECONDS;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_NOVICE;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_APPRENTICE;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_JOURNEYMAN;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_EXPERT;
-        private final ForgeConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_MASTER;
-        private final ForgeConfigSpec.BooleanValue PATTERNS_FORCE_RECALCULATE_MISSING;
+        private final ModConfigSpec.IntValue MIND_TRAINING_IMPRESSION_COST_DUST;
+        private final ModConfigSpec.IntValue MIND_TRAINING_IMPRESSION_MARK_EXPIRATION_SECONDS;
+        private final ModConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_NOVICE;
+        private final ModConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_APPRENTICE;
+        private final ModConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_JOURNEYMAN;
+        private final ModConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_EXPERT;
+        private final ModConfigSpec.IntValue MIND_TRAINING_NUM_IMPRESSIONS_MASTER;
+        private final ModConfigSpec.BooleanValue PATTERNS_FORCE_RECALCULATE_MISSING;
 
-        private final ForgeConfigSpec spec;
+        private final ModConfigSpec spec;
 
         private ServerConfigSpec() {
-            ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+            ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
             // Begin Server
             builder.comment("Hex Research Server Configuration").push("server");

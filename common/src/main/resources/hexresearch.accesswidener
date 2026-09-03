@@ -1,3 +1,0 @@
-accessWidener   v2  named
-accessible method net/minecraft/world/entity/npc/Villager tellWitnessesThatIWasMurdered (Lnet/minecraft/world/entity/Entity;)V
-accessible field net/minecraft/world/entity/npc/Villager TRADES_PER_LEVEL I

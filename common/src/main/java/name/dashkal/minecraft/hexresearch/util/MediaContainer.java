@@ -57,7 +57,7 @@ public class MediaContainer implements WorldlyContainer {
             return false;
         }
 
-        if (itemStack.is(HexItems.CREATIVE_UNLOCKER)) {
+        if (itemStack.is(HexItems.CREATIVE_UNLOCKER.get())) {
             itemStack.shrink(1);
             setInfinite(true);
             return true;
@@ -75,7 +75,7 @@ public class MediaContainer implements WorldlyContainer {
      * @return the amount of extracted media
      */
     public int extractMediaFromItem(@Nonnull ItemStack itemStack, boolean simulate) {
-        return MediaHelper.extractMedia(itemStack, getRemainingCapacity(), true, simulate);
+        return (int) MediaHelper.extractMedia(itemStack, getRemainingCapacity(), true, simulate);
     }
 
     /**
@@ -190,11 +190,11 @@ public class MediaContainer implements WorldlyContainer {
         if (infinite || currentMedia >= maxMedia) {
             return false;
         }
-        if (itemStack.is(HexItems.CREATIVE_UNLOCKER)) {
+        if (itemStack.is(HexItems.CREATIVE_UNLOCKER.get())) {
             return true;
         }
 
-        int amount = MediaHelper.extractMedia(itemStack, getRemainingCapacity(), true, true);
+        int amount = (int) MediaHelper.extractMedia(itemStack, getRemainingCapacity(), true, true);
         return amount > 0;
     }
 

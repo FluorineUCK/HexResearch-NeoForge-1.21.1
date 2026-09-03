@@ -1,9 +1,10 @@
 package name.dashkal.minecraft.hexresearch.registry;
 
-import at.petrak.hexcasting.api.PatternRegistry;
-import at.petrak.hexcasting.api.spell.Action;
-import at.petrak.hexcasting.api.spell.math.HexDir;
-import at.petrak.hexcasting.api.spell.math.HexPattern;
+import at.petrak.hexcasting.api.casting.ActionRegistryEntry;
+import at.petrak.hexcasting.api.casting.castables.Action;
+import at.petrak.hexcasting.api.casting.math.HexDir;
+import at.petrak.hexcasting.api.casting.math.HexPattern;
+import at.petrak.hexcasting.common.lib.HexRegistries;
 import kotlin.Triple;
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.casting.patterns.spells.OpCloneMind;
@@ -11,17 +12,20 @@ import name.dashkal.minecraft.hexresearch.casting.patterns.spells.OpThoughtSieve
 import name.dashkal.minecraft.hexresearch.casting.patterns.spells.great.OpImbueMind;
 import name.dashkal.minecraft.hexresearch.casting.patterns.villager.OpVillagerPopularity;
 import name.dashkal.minecraft.hexresearch.casting.patterns.villager.OpVillagerRank;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import static name.dashkal.minecraft.hexresearch.HexResearch.id;
 
 public class HRHexPatterns {
     public static Set<ResourceLocation> PER_WORLD_PATTERN_IDS = new HashSet<>();
+    public static Set<ResourceKey<ActionRegistryEntry>> PER_WORLD_PATTERN_KEYS = new HashSet<>();
     public static List<Triple<HexPattern, ResourceLocation, Action>> PATTERNS = new ArrayList<>();
     public static List<Triple<HexPattern, ResourceLocation, Action>> PER_WORLD_PATTERNS = new ArrayList<>();
 
@@ -45,15 +49,15 @@ public class HRHexPatterns {
     public static HexPattern CLONE_MIND = register(HexPattern.fromAngles("dwwdwwdwedwd", HexDir.WEST), "clone_mind", new OpCloneMind());
 
     public static void init() {
-        try {
-            for (Triple<HexPattern, ResourceLocation, Action> patternTriple : PATTERNS) {
-                PatternRegistry.mapPattern(patternTriple.getFirst(), patternTriple.getSecond(), patternTriple.getThird());
-            }
-            for (Triple<HexPattern, ResourceLocation, Action> patternTriple : PER_WORLD_PATTERNS) {
-                PatternRegistry.mapPattern(patternTriple.getFirst(), patternTriple.getSecond(), patternTriple.getThird(), true);
-            }
-        } catch (PatternRegistry.RegisterPatternException e) {
-            e.printStackTrace();
+        // Static holder for pattern definitions. Platform entrypoints perform registry writes.
+    }
+
+    public static void registerAll(BiConsumer<ResourceLocation, ActionRegistryEntry> registrar) {
+        for (Triple<HexPattern, ResourceLocation, Action> patternTriple : PATTERNS) {
+            registrar.accept(patternTriple.getSecond(), new ActionRegistryEntry(patternTriple.getFirst(), patternTriple.getThird()));
+        }
+        for (Triple<HexPattern, ResourceLocation, Action> patternTriple : PER_WORLD_PATTERNS) {
+            registrar.accept(patternTriple.getSecond(), new ActionRegistryEntry(patternTriple.getFirst(), patternTriple.getThird()));
         }
     }
 
@@ -67,6 +71,7 @@ public class HRHexPatterns {
         Triple<HexPattern, ResourceLocation, Action> triple = new Triple<>(pattern, id(name), action);
         PER_WORLD_PATTERNS.add(triple);
         PER_WORLD_PATTERN_IDS.add(HexResearch.id(name));
+        PER_WORLD_PATTERN_KEYS.add(ResourceKey.create(HexRegistries.ACTION, HexResearch.id(name)));
         return pattern;
     }
 }

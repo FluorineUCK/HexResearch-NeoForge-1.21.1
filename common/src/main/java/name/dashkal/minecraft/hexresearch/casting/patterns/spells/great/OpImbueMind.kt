@@ -1,13 +1,13 @@
 package name.dashkal.minecraft.hexresearch.casting.patterns.spells.great
 
 import at.petrak.hexcasting.api.misc.MediaConstants
-import at.petrak.hexcasting.api.spell.ParticleSpray
-import at.petrak.hexcasting.api.spell.RenderedSpell
-import at.petrak.hexcasting.api.spell.SpellAction
-import at.petrak.hexcasting.api.spell.casting.CastingContext
-import at.petrak.hexcasting.api.spell.getBlockPos
-import at.petrak.hexcasting.api.spell.iota.Iota
-import at.petrak.hexcasting.api.spell.mishaps.MishapBadBlock
+import at.petrak.hexcasting.api.casting.ParticleSpray
+import at.petrak.hexcasting.api.casting.RenderedSpell
+import at.petrak.hexcasting.api.casting.castables.SpellAction
+import at.petrak.hexcasting.api.casting.eval.CastingEnvironment
+import at.petrak.hexcasting.api.casting.getBlockPos
+import at.petrak.hexcasting.api.casting.iota.Iota
+import at.petrak.hexcasting.api.casting.mishaps.MishapBadBlock
 import at.petrak.hexcasting.api.utils.asTranslatedComponent
 import at.petrak.hexcasting.common.recipe.BrainsweepRecipe
 import at.petrak.hexcasting.common.recipe.HexRecipeStuffRegistry
@@ -22,13 +22,13 @@ import kotlin.jvm.optionals.getOrNull
 
 class OpImbueMind : SpellAction {
     override val argc: Int = 2
-    val cost: Int = 10 * MediaConstants.CRYSTAL_UNIT
+    val cost: Long = 10L * MediaConstants.CRYSTAL_UNIT.toLong()
 
-    override fun execute(args: List<Iota>, ctx: CastingContext): Triple<RenderedSpell, Int, List<ParticleSpray>>? {
+    override fun execute(args: List<Iota>, ctx: CastingEnvironment): SpellAction.Result {
         val sourceMindPos = args.getBlockPos(0, argc)
         val targetBlockPos = args.getBlockPos(1, argc)
-        ctx.assertVecInRange(sourceMindPos)
-        ctx.assertVecInRange(targetBlockPos)
+        ctx.assertPosInRange(sourceMindPos)
+        ctx.assertPosInRange(targetBlockPos)
 
         // Confirm we have a source cognitive inducer
         val artificialMind = ctx.world.getBlockEntity(sourceMindPos)
@@ -40,9 +40,7 @@ class OpImbueMind : SpellAction {
             ?: throw MishapBadBlock(sourceMindPos, "text.hexresearch.imbue_mind.cognitive_inducer".asTranslatedComponent)
 
         // Copied from OpBrainsweep - I should figure out what this means.
-        if (!ctx.canEditBlockAt(targetBlockPos)) {
-            return null
-        }
+        ctx.assertPosInRangeForEditing(targetBlockPos)
 
         // Grab the target block
         val state = ctx.world.getBlockState(targetBlockPos)
@@ -54,15 +52,15 @@ class OpImbueMind : SpellAction {
             InteropSpell(artificialMind, r.get())
         } else {
             // Look for an applicable recipe or mishap if we fail
-            val recipes = ctx.world.recipeManager.getAllRecipesFor(HexRecipeStuffRegistry.BRAINSWEEP_TYPE)
-            val recipe = recipes.find(checkBrainsweepRecipe(state, mind))
+            val recipes = ctx.world.recipeManager.getAllRecipesFor(HexRecipeStuffRegistry.BRAINSWEEP_TYPE.get())
+            val recipe = recipes.map { it.value() }.find(checkBrainsweepRecipe(state, mind))
                 ?: throw MishapBadMindImbue(artificialMind, targetBlockPos)
 
             // Success, return the spell
             Spell(artificialMind, targetBlockPos, state, recipe)
         }
 
-        return Triple(
+        return SpellAction.Result(
             spell,
             cost,
             listOf(
@@ -77,13 +75,7 @@ class OpImbueMind : SpellAction {
      */
     private fun checkBrainsweepRecipe(state: BlockState, mind: Mind): (BrainsweepRecipe) -> Boolean {
         return { recipe ->
-            val recipeProfession = recipe.villagerIn.profession
-            val recipeBiome = recipe.villagerIn.biome
-
             recipe.blockIn.test(state)
-                    && (recipeProfession == null || recipeProfession == mind.profession)
-                    && (recipeBiome == null || recipeBiome == mind.biome)
-                    && (recipe.villagerIn.minLevel <= mind.rank)
         }
     }
 
@@ -96,7 +88,7 @@ class OpImbueMind : SpellAction {
         val state: BlockState,
         val recipe: BrainsweepRecipe
     ) : RenderedSpell {
-        override fun cast(ctx: CastingContext) {
+        override fun cast(ctx: CastingEnvironment) {
             sourceMind.clearMind()
             ctx.world.setBlockAndUpdate(targetBlockPos, BrainsweepRecipe.copyProperties(state, recipe.result))
         }
@@ -109,7 +101,7 @@ class OpImbueMind : SpellAction {
         val sourceMind: CognitiveInducerBlockEntity,
         val accept: Runnable
     ) : RenderedSpell {
-        override fun cast(ctx: CastingContext) {
+        override fun cast(ctx: CastingEnvironment) {
             sourceMind.clearMind()
             accept.run()
         }

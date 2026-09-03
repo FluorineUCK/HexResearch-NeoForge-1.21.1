@@ -4,7 +4,10 @@ import name.dashkal.minecraft.hexresearch.effect.MindFatigueEffect;
 import name.dashkal.minecraft.hexresearch.forge.cap.ICognitiveInducerMarks;
 import name.dashkal.minecraft.hexresearch.forge.effect.MindFatigueEffectImpl;
 import name.dashkal.minecraft.hexresearch.xplat.XPlatAPI;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.SortedSet;
 
@@ -31,5 +34,10 @@ public class ForgeXPlatAPIImpl extends XPlatAPI {
     @Override
     public void cognitiveInducerPruneMarks(Villager villager, long gameTime) {
         ICognitiveInducerMarks.with(villager, c -> c.pruneMarks(gameTime));
+    }
+
+    @Override
+    public void sendPacketToPlayer(ServerPlayer player, CustomPacketPayload payload) {
+        PacketDistributor.sendToPlayer(player, payload);
     }
 }

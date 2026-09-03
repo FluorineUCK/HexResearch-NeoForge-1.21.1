@@ -1,6 +1,7 @@
 package name.dashkal.minecraft.hexresearch.effect;
 
 import name.dashkal.minecraft.hexresearch.HexResearch;
+import name.dashkal.minecraft.hexresearch.registry.HREffects;
 import name.dashkal.minecraft.hexresearch.xplat.XPlatAPI;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -21,21 +22,23 @@ public abstract class MindFatigueEffect extends MobEffect {
         return XPlatAPI.getInstance().getMindFatigueEffect();
     }
 
-    public static final ResourceLocation ID = new ResourceLocation(HexResearch.MOD_ID, "mind_fatigue");
+    public static final ResourceLocation ID = HexResearch.id("mind_fatigue");
 
     public MindFatigueEffect() {
         super(MobEffectCategory.HARMFUL, 0x404040);
     }
 
     public static MobEffectInstance effectInstance(int durationTicks) {
-        return new MobEffectInstance(getInstance(), durationTicks);
+        return new MobEffectInstance(HREffects.EFFECT_MIND_FATIGUE, durationTicks);
     }
 
     @Override
-    public void applyEffectTick(@Nonnull LivingEntity livingEntity, int i) {}
+    public boolean applyEffectTick(@Nonnull LivingEntity livingEntity, int i) {
+        return false;
+    }
 
     @Override
-    public boolean isDurationEffectTick(int i, int j) {
+    public boolean shouldApplyEffectTickThisTick(int i, int j) {
         return false;
     }
 

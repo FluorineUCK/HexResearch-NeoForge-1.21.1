@@ -1,7 +1,7 @@
 package name.dashkal.minecraft.hexresearch.block.entity;
 
 import at.petrak.hexcasting.api.misc.MediaConstants;
-import at.petrak.hexcasting.common.misc.Brainsweeping;
+import at.petrak.hexcasting.api.HexAPI;
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.client.particles.HRParticleUtils;
 import name.dashkal.minecraft.hexresearch.config.ServerConfig;
@@ -11,7 +11,8 @@ import name.dashkal.minecraft.hexresearch.util.Mind;
 import name.dashkal.minecraft.hexresearch.util.MindImpressions;
 import name.dashkal.minecraft.hexresearch.xplat.XPlatAPI;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
@@ -154,22 +155,22 @@ public class CognitiveInducerBlockEntity extends AbstractMediaContainerBlockEnti
     }
 
     @Override
-    public void load(@Nonnull CompoundTag compoundTag) {
-        super.load(compoundTag);
+    protected void loadAdditional(@Nonnull CompoundTag compoundTag, @Nonnull HolderLookup.Provider provider) {
+        super.loadAdditional(compoundTag, provider);
         impressions = MindImpressions.load(compoundTag.getList(TAG_IMPRESSIONS, Tag.TAG_COMPOUND));
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag) {
+    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider provider) {
         compoundTag.put(TAG_IMPRESSIONS, impressions.save());
-        super.saveAdditional(compoundTag);
+        super.saveAdditional(compoundTag, provider);
     }
 
     @Nonnull
     @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        saveAdditional(tag);
+    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        CompoundTag tag = super.getUpdateTag(provider);
+        saveAdditional(tag, provider);
         return tag;
     }
 
@@ -236,7 +237,7 @@ public class CognitiveInducerBlockEntity extends AbstractMediaContainerBlockEnti
         List<Villager> villagers = new LinkedList<>(serverLevel.getEntitiesOfClass(Villager.class, bounds, v ->
                 v.distanceToSqr(blockPosF) <= (IMPRESSION_RANGE * IMPRESSION_RANGE)
                         && v.isAlive()
-                        && !Brainsweeping.isBrainswept(v)
+                        && !HexAPI.instance().isBrainswept(v)
         ));
         shuffleList(villagers, randomSource);
         return villagers;
@@ -270,15 +271,15 @@ public class CognitiveInducerBlockEntity extends AbstractMediaContainerBlockEnti
     private Consumer<Villager> takeImpression(ServerLevel serverLevel, BlockPos blockPos) {
         ServerConfig.MindTrainingConfig cfg = HexResearch.getServerConfig().mindTrainingConfig();
         return villager -> {
-            if (mediaContainer.consumeMedia(cfg.impressionCostDust() * MediaConstants.DUST_UNIT)) {
+            if (mediaContainer.consumeMedia((int) (cfg.impressionCostDust() * MediaConstants.DUST_UNIT))) {
                 // Check for disqualification due to recent impression or exhaustion
                 boolean willImpress = isReadyForImpression(villager, serverLevel.getGameTime());
 
                 if (willImpress) {
                     // Impress them into the artificial mind
                     impressMind(
-                            Registry.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()),
-                            Registry.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()),
+                            BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()),
+                            BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()),
                             villager.getVillagerData().getLevel()
                     );
                 }

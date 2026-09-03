@@ -2,16 +2,10 @@ package name.dashkal.minecraft.hexresearch.forge.cap;
 
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.block.entity.AbstractMediaContainerBlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class MediaContainerItemHandler implements IItemHandler {
     public static final ResourceLocation ID = HexResearch.id("mediacontainer");
@@ -65,16 +59,4 @@ public class MediaContainerItemHandler implements IItemHandler {
         return blockEntity.canPlaceItem(slotId, itemStack);
     }
 
-    public static class CapabilityProvider implements ICapabilityProvider {
-        private final LazyOptional<MediaContainerItemHandler> lazySupplier;
-
-        public CapabilityProvider(AbstractMediaContainerBlockEntity blockEntity) {
-            this.lazySupplier = LazyOptional.of(() -> new MediaContainerItemHandler(blockEntity));
-        }
-
-        @Override
-        public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction arg) {
-            return ForgeCapabilities.ITEM_HANDLER.orEmpty(capability, lazySupplier.cast());
-        }
-    }
 }

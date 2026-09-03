@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "sas",
+    "ada",
+    "sas"
+  ],
+  "key": {
+    "s": { "item": "hexcasting:slate" },
+    "a": { "item": "minecraft:amethyst_shard" },
+    "d": { "item": "minecraft:diamond" }
+  },
+  "result": {
+    "id": "hexresearch:cognitive_inducer"
+  }
+}

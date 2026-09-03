@@ -5,7 +5,7 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.block.CognitiveInducerBlock;
 import name.dashkal.minecraft.hexresearch.block.entity.CognitiveInducerBlockEntity;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class HRBlockEntities {
-    public static DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(HexResearch.MOD_ID, Registry.BLOCK_ENTITY_TYPE_REGISTRY);
+    public static DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(HexResearch.MOD_ID, Registries.BLOCK_ENTITY_TYPE);
 
     public static void init() {
         BLOCK_ENTITIES.register();

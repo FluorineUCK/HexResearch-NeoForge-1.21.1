@@ -1,16 +1,10 @@
 package name.dashkal.minecraft.hexresearch.interop.impl;
 
-import at.petrak.hexcasting.api.spell.casting.CastingContext;
-import com.samsthenerd.hexgloop.blocks.IDynamicFlayTarget;
+import at.petrak.hexcasting.api.casting.eval.CastingEnvironment;
 import dev.architectury.platform.Platform;
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.util.Mind;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.Villager;
 
 import java.util.Optional;
 
@@ -36,35 +30,7 @@ public class HexGloopInteropImpl {
      * @param mind the mind being offered
      * @return an optional Runnable that if present, will accept the offered mind
      */
-    public Optional<Runnable> offerMind(CastingContext ctx, BlockPos blockPos, Mind mind) {
-        ServerLevel level = ctx.getWorld();
-        if (level.getBlockState(blockPos).getBlock() instanceof IDynamicFlayTarget dft) {
-            return offerMindToDynamicFlayTarget(ctx, blockPos, mind, dft);
-        } else if (level.getBlockEntity(blockPos) instanceof IDynamicFlayTarget dft) {
-            return offerMindToDynamicFlayTarget(ctx, blockPos, mind, dft);
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<Runnable> offerMindToDynamicFlayTarget(CastingContext ctx, BlockPos blockPos, Mind mind, IDynamicFlayTarget dft) {
-        ServerLevel level = ctx.getWorld();
-        Villager villager = new Villager(EntityType.VILLAGER, level);
-        villager.setVillagerData(
-                villager.getVillagerData()
-                        .setProfession(Registry.VILLAGER_PROFESSION.get(mind.profession()))
-                        .setType(Registry.VILLAGER_TYPE.get(mind.biome()))
-                        .setLevel(mind.rank())
-        );
-
-        if (dft.canAcceptMind(villager, blockPos, ctx)) {
-            return Optional.of(() -> {
-                dft.absorbVillagerMind(villager, blockPos, ctx);
-                villager.remove(Entity.RemovalReason.DISCARDED);
-            });
-        } else {
-            villager.remove(Entity.RemovalReason.DISCARDED);
-            return Optional.empty();
-        }
+    public Optional<Runnable> offerMind(CastingEnvironment ctx, BlockPos blockPos, Mind mind) {
+        return Optional.empty();
     }
 }

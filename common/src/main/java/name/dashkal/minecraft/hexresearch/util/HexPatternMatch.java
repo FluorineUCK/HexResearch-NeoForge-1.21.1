@@ -1,8 +1,8 @@
 package name.dashkal.minecraft.hexresearch.util;
 
-import at.petrak.hexcasting.api.spell.math.HexCoord;
-import at.petrak.hexcasting.api.spell.math.HexDir;
-import at.petrak.hexcasting.api.spell.math.HexPattern;
+import at.petrak.hexcasting.api.casting.math.HexCoord;
+import at.petrak.hexcasting.api.casting.math.HexDir;
+import at.petrak.hexcasting.api.casting.math.HexPattern;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

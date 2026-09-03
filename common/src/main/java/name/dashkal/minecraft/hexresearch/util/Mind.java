@@ -1,6 +1,6 @@
 package name.dashkal.minecraft.hexresearch.util;
 
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -13,15 +13,15 @@ import java.util.Random;
 
 /**
  * A fabricated villager mind. Used by the Cognitive Inducer block and the Imbue Mind spell.
- * @param profession the profession of the villager. Should match a key in `Registry.VILLAGER_PROFESSION`
- * @param biome the type of the villager. Should match a key in `Registry.VILLAGER_TYPE`
+ * @param profession the profession of the villager.
+ * @param biome the type of the villager.
  * @param rank the rank of the villager. Should be in the range 1..5 inclusive
  */
 public record Mind(@Nonnull ResourceLocation profession, @Nonnull ResourceLocation biome, @Nonnegative int rank) {
     public static Mind fromVillager(@Nonnull Villager villager) {
         return new Mind(
-                Registry.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()),
-                Registry.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()),
+                BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()),
+                BuiltInRegistries.VILLAGER_TYPE.getKey(villager.getVillagerData().getType()),
                 villager.getVillagerData().getLevel()
         );
     }

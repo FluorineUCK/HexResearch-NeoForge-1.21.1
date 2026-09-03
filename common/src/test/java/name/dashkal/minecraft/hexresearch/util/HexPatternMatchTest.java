@@ -1,7 +1,7 @@
 package name.dashkal.minecraft.hexresearch.util;
 
-import at.petrak.hexcasting.api.spell.math.HexDir;
-import at.petrak.hexcasting.api.spell.math.HexPattern;
+import at.petrak.hexcasting.api.casting.math.HexDir;
+import at.petrak.hexcasting.api.casting.math.HexPattern;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,5 +64,24 @@ public class HexPatternMatchTest {
         HexPattern p1 = HexPattern.fromAngles("eewqqqqqwee", HexDir.NORTH_EAST);
         HexPattern p2 = HexPattern.fromAngles("eeeeaeeeeea", HexDir.WEST);
         assertTrue(HexPatternMatch.shapeMatches(p1, p2));
+    }
+
+    /**
+     * Real Imbue Mind pair captured from the player's 1.21.1/pre-2 world. The first pattern is
+     * HexResearch's registered prototype; the second is the world's canonical alternate drawing.
+     * Thought Sieve is specifically required to accept the same graph independent of stroke order.
+     */
+    @Test
+    void imbueMindPrototypeMatchesWorldCanonicalDrawing() {
+        HexPattern prototype = HexPattern.fromAngles(
+            "wqwqwqwqwqwaewaqeqaqeedqdd",
+            HexDir.NORTH_EAST
+        );
+        HexPattern worldCanonical = HexPattern.fromAngles(
+            "qqqqawwdeewwdeqeaqwqwqwqwa",
+            HexDir.values()[0]
+        );
+
+        assertTrue(HexPatternMatch.shapeMatches(prototype, worldCanonical));
     }
 }

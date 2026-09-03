@@ -7,7 +7,6 @@ import name.dashkal.minecraft.hexresearch.config.HexResearchConfig;
 import name.dashkal.minecraft.hexresearch.config.ServerConfig;
 import name.dashkal.minecraft.hexresearch.event.Events;
 import name.dashkal.minecraft.hexresearch.interop.Interop;
-import name.dashkal.minecraft.hexresearch.network.Networking;
 import name.dashkal.minecraft.hexresearch.registry.*;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -37,9 +36,6 @@ public class HexResearch {
         // Events
         Events.init();
 
-        // Networking
-        Networking.init();
-
         // HexResearch internals
         HRMindHarms.init();
 
@@ -63,6 +59,6 @@ public class HexResearch {
      * Shortcut for identifiers specific to this mod.
      */
     public static ResourceLocation id(String string) {
-        return new ResourceLocation(MOD_ID, string);
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, string);
     }
 }

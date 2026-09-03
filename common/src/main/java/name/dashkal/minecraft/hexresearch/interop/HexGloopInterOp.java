@@ -1,6 +1,6 @@
 package name.dashkal.minecraft.hexresearch.interop;
 
-import at.petrak.hexcasting.api.spell.casting.CastingContext;
+import at.petrak.hexcasting.api.casting.eval.CastingEnvironment;
 import name.dashkal.minecraft.hexresearch.interop.impl.HexGloopInteropImpl;
 import name.dashkal.minecraft.hexresearch.util.Mind;
 import net.minecraft.core.BlockPos;
@@ -36,7 +36,7 @@ public class HexGloopInterOp {
      * @param mind the mind being offered
      * @return an optional Runnable that if present, will accept the offered mind
      */
-    public Optional<Runnable> offerMind(CastingContext ctx, BlockPos blockPos, Mind mind) {
+    public Optional<Runnable> offerMind(CastingEnvironment ctx, BlockPos blockPos, Mind mind) {
         return indirect.withApiFuncOpt(api -> api.offerMind(ctx, blockPos, mind));
     }
 }

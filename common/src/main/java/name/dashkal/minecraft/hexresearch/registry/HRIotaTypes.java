@@ -1,7 +1,7 @@
 package name.dashkal.minecraft.hexresearch.registry;
 
-import at.petrak.hexcasting.api.spell.iota.Iota;
-import at.petrak.hexcasting.api.spell.iota.IotaType;
+import at.petrak.hexcasting.api.casting.iota.Iota;
+import at.petrak.hexcasting.api.casting.iota.IotaType;
 import at.petrak.hexcasting.common.lib.hex.HexIotaTypes;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;

@@ -2,14 +2,13 @@ package name.dashkal.minecraft.hexresearch.network;
 
 import at.petrak.hexcasting.common.entities.EntityWallScroll;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import name.dashkal.minecraft.hexresearch.xplat.XPlatAPI;
 
 public class Networking {
-    public static void init() {
-    }
-
     /**
      * Send a packet to clients updating the drawn pattern on a scroll.
      * @param entity the hanging scroll to update
@@ -19,7 +18,7 @@ public class Networking {
         ScrollSyncPacket packet = new ScrollSyncPacket(entity.getId(), entity.scroll);
 
         for (ServerPlayer player : level.players()) {
-            packet.sendToPlayer(player);
+            sendToPlayer(player, packet);
         }
     }
 
@@ -34,7 +33,11 @@ public class Networking {
         MindImpressionPacket packet = new MindImpressionPacket(level.dimension().location(), source.getId(), inducerPos, successful);
 
         for (ServerPlayer player : level.players()) {
-            packet.sendToPlayer(player);
+            sendToPlayer(player, packet);
         }
+    }
+
+    private static void sendToPlayer(ServerPlayer player, CustomPacketPayload packet) {
+        XPlatAPI.getInstance().sendPacketToPlayer(player, packet);
     }
 }

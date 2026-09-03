@@ -1,33 +1,29 @@
-plugins {
-    id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "me.modmuss50.mod-publish-plugin" version "0.3.0"
-}
-
-archivesBaseName = getArtifactId("forge")
+archivesBaseName = getArtifactId("neoforge")
+def enableClientWorldProbe = providers.gradleProperty("hexresearchClientWorldProbe").present
 
 architectury {
     platformSetupLoomIde()
-    forge()
+    neoForge {
+        platformPackage = "forge"
+    }
 }
 
 loom {
-    accessWidenerPath = project(":common").loom.accessWidenerPath
-
-    forge {
-        convertAccessWideners = true
-        extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
-
-        mixinConfig "hexresearch-common.mixins.json"
-        mixinConfig "hexresearch.mixins.json"
+    if (enableClientWorldProbe) {
+        runs {
+            client {
+                vmArg "-Dhexresearch.probe.requireClientWorld=true"
+                programArgs(["--quickPlaySingleplayer", "HexResearchProbePre2"])
+            }
+        }
     }
 }
 
 configurations {
     common
-    shadowCommon // Don't use shadow from the shadow plugin since it *excludes* files.
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
-    developmentForge.extendsFrom common
+    developmentNeoForge.extendsFrom common
 }
 
 repositories {
@@ -37,55 +33,48 @@ repositories {
 dependencies {
     modCompileOnly(group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2') // for @Nonnull
 
-    forge "net.minecraftforge:forge:${project.forgeVersion}"
-    modApi "dev.architectury:architectury-forge:${project.architecturyVersion}"
+    neoForge "net.neoforged:neoforge:${project.neoForgeVersion}"
+    modApi "dev.architectury:architectury-neoforge:${project.architecturyVersion}"
 
     // mixin extras
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixinExtrasVersion}"))
-    runtimeOnly(include("io.github.llamalad7:mixinextras-forge:${mixinExtrasVersion}"))
+    runtimeOnly(include("io.github.llamalad7:mixinextras-neoforge:${mixinExtrasVersion}"))
 
-    modImplementation("at.petra-k.hexcasting:hexcasting-forge-${project.minecraftVersion}:${project.hexcastingVersion}") {
-        transitive = false
-    }
+    compileOnly files(rootProject.file("hexcasting-neoforge-${minecraftVersion}-${hexcastingVersion}.jar"))
+    runtimeOnly files(rootProject.file("hexcasting-neoforge-${minecraftVersion}-${hexcastingVersion}.jar"))
 
-    // // Hex Casting Dependencies
-    modCompileOnly "at.petra-k.paucal:paucal-forge-${minecraftVersion}:${paucalVersion}"
-    modCompileOnly "vazkii.patchouli:Patchouli:${minecraftVersion}-${patchouliVersion}"
-
-    modRuntimeOnly "at.petra-k.paucal:paucal-forge-${minecraftVersion}:${paucalVersion}"
-    modRuntimeOnly "vazkii.patchouli:Patchouli:${minecraftVersion}-${patchouliVersion}"
-    modRuntimeOnly "maven.modrinth:hexgloop:$minecraftVersion-$hexgloopVersion-forge"
-    modRuntimeOnly "maven.modrinth:wnboi:$wnboiVersion-forge"
-
-    runtimeOnly "thedarkcolour:kotlinforforge:$project.forgeKotlinVersion"
+    runtimeOnly "thedarkcolour:kotlinforforge-neoforge:$project.forgeKotlinVersion"
+    runtimeOnly files(rootProject.file("paucal-0.7.1-pre-27+${minecraftVersion}-neoforge.jar"))
+    compileOnly "vazkii.patchouli:Patchouli:${project.patchouliVersion}"
+    runtimeOnly "vazkii.patchouli:Patchouli:${project.patchouliVersion}"
+    runtimeOnly files(rootProject.file("caelus-neoforge-${project.caelusVersion}.jar"))
+    runtimeOnly files(rootProject.file("inline-${project.inlineVersion}-devruntime.jar"))
+    runtimeOnly "me.shedaniel.cloth:cloth-config-neoforge:${project.clothConfigVersion}"
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
-    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
 }
 
 processResources {
     inputs.property "version", project.version
 
-    filesMatching("META-INF/mods.toml") {
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand "version": project.version
     }
 }
 
-shadowJar {
-    exclude "fabric.mod.json"
-    exclude "architectury.common.json"
-
-    configurations = [project.configurations.shadowCommon]
-    archiveClassifier.set "dev-shadow"
-}
-
 remapJar {
-    input.set shadowJar.archiveFile
-    dependsOn shadowJar
+    input.set jar.archiveFile
+    dependsOn jar
     archiveClassifier.set null
 }
 
 jar {
+    dependsOn project(":common").tasks.named("classes")
+    from project(":common").sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude "fabric.mod.json"
+    exclude "architectury.common.json"
+    exclude "name/dashkal/minecraft/hexresearch/forge/probe/**"
     archiveClassifier.set "dev"
 }
 
@@ -93,12 +82,6 @@ sourcesJar {
     def commonSources = project(":common").sourcesJar
     dependsOn commonSources
     from commonSources.archiveFile.map { zipTree(it) }
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
 }
 
 // this fixes mod's hex notebook additions missing in dev runtime because of something with how patchouli handles its data
@@ -134,47 +117,3 @@ publishing {
     }
 }
 
-publishMods {
-    file = remapJar.archiveFile
-    additionalFiles.from(sourcesJar.archiveFile)
-    changelog = getLatestChangelog()
-    type = STABLE
-    modLoaders.add("forge")
-
-    version = project.version + "-forge"
-    displayName = "Hex Research $project.version [Forge]"
-
-    // Uncomment your desired platform(s)
-//    curseforge {
-//        accessToken = project.curseforgeApiToken
-//        println accessToken.get()
-//        projectId = project.curseforgeId
-//        minecraftVersions.add(minecraftVersion)
-//
-//        requires {
-//            slug = "architectury-api"
-//        }
-//        requires {
-//            slug = "kotlin-for-forge"
-//        }
-//        requires {
-//            slug = "hexcasting"
-//        }
-//    }
-//
-//    modrinth {
-//        accessToken = project.modrinthApiToken
-//        projectId = project.modrinthId
-//        minecraftVersions.add("1.19.2")
-//
-//        requires {
-//            slug = "architectury-api"
-//        }
-//        requires {
-//            slug = "kotlin-for-forge"
-//        }
-//        requires {
-//            slug = "hex-casting"
-//        }
-//    }
-}

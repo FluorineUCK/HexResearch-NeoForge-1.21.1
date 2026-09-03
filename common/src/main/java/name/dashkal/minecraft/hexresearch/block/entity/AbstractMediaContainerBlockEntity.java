@@ -3,6 +3,7 @@ package name.dashkal.minecraft.hexresearch.block.entity;
 import name.dashkal.minecraft.hexresearch.util.MediaContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Player;
@@ -64,8 +65,8 @@ public abstract class AbstractMediaContainerBlockEntity extends BlockEntity impl
     // Data persistence
 
     @Override
-    public void load(@Nonnull CompoundTag compoundTag) {
-        super.load(compoundTag);
+    protected void loadAdditional(@Nonnull CompoundTag compoundTag, @Nonnull HolderLookup.Provider provider) {
+        super.loadAdditional(compoundTag, provider);
         mediaContainer.setCurrentMedia(compoundTag.getInt(TAG_CURRENT_MEDIA));
         mediaContainer.setInfinite(compoundTag.getBoolean(TAG_INFINITE_MEDIA));
 
@@ -77,18 +78,18 @@ public abstract class AbstractMediaContainerBlockEntity extends BlockEntity impl
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compoundTag) {
+    protected void saveAdditional(CompoundTag compoundTag, HolderLookup.Provider provider) {
         compoundTag.putInt(TAG_CURRENT_MEDIA, mediaContainer.getCurrentMedia());
         compoundTag.putInt(TAG_MAXIMUM_MEDIA, mediaContainer.getMaxMedia());
         compoundTag.putBoolean(TAG_INFINITE_MEDIA, mediaContainer.isInfinite());
-        super.saveAdditional(compoundTag);
+        super.saveAdditional(compoundTag, provider);
     }
 
     @Nonnull
     @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        saveAdditional(tag);
+    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        CompoundTag tag = super.getUpdateTag(provider);
+        saveAdditional(tag, provider);
         return tag;
     }
 

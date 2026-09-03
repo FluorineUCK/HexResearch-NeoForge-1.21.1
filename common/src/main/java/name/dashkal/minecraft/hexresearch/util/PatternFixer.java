@@ -1,33 +1,44 @@
 package name.dashkal.minecraft.hexresearch.util;
 
-import at.petrak.hexcasting.api.PatternRegistry;
-import at.petrak.hexcasting.api.spell.math.HexDir;
-import com.mojang.datafixers.util.Pair;
+import at.petrak.hexcasting.server.ScrungledPatternsSave;
 import name.dashkal.minecraft.hexresearch.HexResearch;
 import name.dashkal.minecraft.hexresearch.registry.HRHexPatterns;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.storage.DimensionDataStorage;
+import net.minecraft.world.level.Level;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+public final class PatternFixer {
+    private PatternFixer() {
+    }
 
-public class PatternFixer {
     public static void ensurePerWorldPatterns(ServerLevel serverLevel) {
-        Map<String, Pair<ResourceLocation, HexDir>> patterns = PatternRegistry.getPerWorldPatterns(serverLevel);
-        Set<ResourceLocation> perWorldPatternIds = patterns.values().stream().map(Pair::getFirst).collect(Collectors.toSet());
+        // SERVER_LEVEL_LOAD fires once for every dimension, but Hex Casting stores
+        // the per-world pattern manifest in the overworld's data storage.
+        if (!serverLevel.dimension().equals(Level.OVERWORLD)) {
+            return;
+        }
 
-        // If we do not have all our per-world spells, force a recalculation
-        if (!perWorldPatternIds.containsAll(HRHexPatterns.PER_WORLD_PATTERN_IDS)) {
-            if (HexResearch.getServerConfig().patternConfig().forceRecalculateMissing()) {
-                HexResearch.LOGGER.warn("Hex Casting Pattern Registry does not have our per-world patterns! Forcing regeneration.");
-                ServerLevel overWorld = serverLevel.getServer().overworld();
-                DimensionDataStorage ds = overWorld.getDataStorage();
-                ds.set(PatternRegistry.TAG_SAVED_DATA, PatternRegistry.Save.create(overWorld.getSeed()));
-            } else {
-                HexResearch.LOGGER.warn("Hex Casting Pattern Registry does not have our per-world patterns! Run the command /hexcasting recalcPatterns to regenerate the registry.");
-            }
+        ServerLevel overworld = serverLevel.getServer().overworld();
+        ScrungledPatternsSave patterns = ScrungledPatternsSave.open(overworld);
+
+        boolean missingPattern = HRHexPatterns.PER_WORLD_PATTERN_KEYS.stream()
+                .anyMatch(key -> patterns.lookupReverse(key) == null);
+        if (!missingPattern) {
+            return;
+        }
+
+        if (HexResearch.getServerConfig().patternConfig().forceRecalculateMissing()) {
+            HexResearch.LOGGER.warn(
+                    "Hex Casting's per-world pattern data is missing a Hex Research pattern; regenerating it."
+            );
+            overworld.getDataStorage().set(
+                    ScrungledPatternsSave.TAG_SAVED_DATA,
+                    ScrungledPatternsSave.createFromScratch(overworld.getSeed())
+            );
+        } else {
+            HexResearch.LOGGER.warn(
+                    "Hex Casting's per-world pattern data is missing a Hex Research pattern; "
+                            + "run /hexcasting recalcPatterns to regenerate it."
+            );
         }
     }
 }

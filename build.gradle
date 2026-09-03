@@ -1,12 +1,10 @@
 plugins {
-    id "architectury-plugin" version "3.4.+"
+    id "architectury-plugin" version "3.4.164"
 
-    id "dev.architectury.loom" version "1.2.+" apply false
+    id "dev.architectury.loom" version "1.9-SNAPSHOT" apply false
 
-    id "org.jetbrains.kotlin.jvm" version "1.8.0" apply false
+    id "org.jetbrains.kotlin.jvm" version "2.2.21" apply false
 
-    // for template.env api keys
-    id "co.uzzu.dotenv.gradle" version "2.0.0"
 }
 
 architectury {
@@ -49,6 +47,10 @@ subprojects {
     sourceSets.main.kotlin.srcDirs += 'src/main/java'
     sourceSets.main.resources.srcDirs += "src/generated/resources"
 
+    kotlin {
+        jvmToolchain(21)
+    }
+
     tasks.withType(Javadoc).configureEach {
         options.addBooleanOption('Xdoclint:none', true)
     }
@@ -67,6 +69,7 @@ allprojects {
     }
 
     repositories {
+        maven { url "https://maven.neoforged.net/releases/" }
         maven { url 'https://jitpack.io' }
         maven {
             url "https://squiddev.cc/maven/"
@@ -97,6 +100,14 @@ allprojects {
             name = 'GeckoLib'
             url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
         }
+        maven {
+            name = "Wisp Forest"
+            url = "https://maven.wispforest.io/releases/"
+        }
+        maven {
+            name = "Sinytra"
+            url = "https://maven.su5ed.dev/releases/"
+        }
         exclusiveContent {
             forRepository {
                 maven {
@@ -114,11 +125,11 @@ allprojects {
 
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
-        options.release = 17
+        options.release = 21
     }
 
     java {
-        java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+        java.toolchain.languageVersion = JavaLanguageVersion.of(21)
         java.withSourcesJar()
         java.withJavadocJar()
     }
@@ -129,7 +140,7 @@ allprojects {
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
-        it.options.release = 17
+        it.options.release = 21
     }
 
     // Disables Gradle's custom module metadata from being published to maven. The
@@ -172,4 +183,22 @@ tasks.register("viewLatestChangelog") {
     doLast {
         println(getLatestChangelog())
     }
+}
+
+tasks.register("runNeoForgeClient") {
+    group "loom"
+    description "Run the NeoForge Minecraft client."
+    dependsOn ":forge:runClient"
+}
+
+tasks.register("runNeoForgeServer") {
+    group "loom"
+    description "Run the NeoForge Minecraft server."
+    dependsOn ":forge:runServer"
+}
+
+tasks.register("genNeoForgeRuns") {
+    group "ide"
+    description "Generate IDE run configurations for the NeoForge target."
+    dependsOn ":forge:genEclipseRuns", ":forge:genIdeaWorkspace", ":forge:vscode"
 }

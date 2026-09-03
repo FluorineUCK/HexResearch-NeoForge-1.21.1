@@ -1,8 +1,6 @@
 package name.dashkal.minecraft.hexresearch.client.particles;
 
-import at.petrak.hexcasting.api.addldata.ADColorizer;
 import at.petrak.hexcasting.common.particles.ConjureParticleOptions;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -19,9 +17,9 @@ public class HRParticleUtils {
                         position.z + ((rand.nextGaussian() - 0.5) / 50)
                 );
 
-                int color = ADColorizer.morphBetweenColors(gradient, new Vec3(0.1, 0.1, 0.1), Minecraft.getInstance().getFrameTime(), thisParticleStart);
+                int color = gradient.length == 0 ? 0xFFFFFF : gradient[rand.nextInt(gradient.length)];
                 level.addParticle(
-                        new ConjureParticleOptions(color, true),
+                        new ConjureParticleOptions(color),
                         thisParticleStart.x,
                         thisParticleStart.y,
                         thisParticleStart.z,

@@ -84,8 +84,8 @@ public class MindImpressions {
 
         for (int i = 0; i < impressionsTag.size(); i++) {
             CompoundTag impressionTag = impressionsTag.getCompound(i);
-            ResourceLocation profession = new ResourceLocation(impressionTag.getString(TAG_PROFESSION));
-            ResourceLocation biome = new ResourceLocation(impressionTag.getString(TAG_BIOME));
+            ResourceLocation profession = ResourceLocation.parse(impressionTag.getString(TAG_PROFESSION));
+            ResourceLocation biome = ResourceLocation.parse(impressionTag.getString(TAG_BIOME));
             int rank = impressionTag.getInt(TAG_RANK);
             int count = impressionTag.getInt(TAG_COUNT);
             impressions.impressMind(new Mind(profession, biome, rank), count);

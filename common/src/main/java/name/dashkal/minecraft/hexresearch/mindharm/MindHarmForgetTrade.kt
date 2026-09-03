@@ -9,7 +9,7 @@ import kotlin.random.Random
 
 /** The villager loses one random trade, falling to a Nitwit if that was the last. */
 class MindHarmForgetTrade : MindHarmMechanic {
-    override fun getId(): ResourceLocation = ResourceLocation(HexResearch.MOD_ID, "mindharm_forget_trade")
+    override fun getId(): ResourceLocation = HexResearch.id("mindharm_forget_trade")
 
     override fun getSeverity(): MindHarmSeverity = MindHarmSeverity.PERMANENT_MINOR
 

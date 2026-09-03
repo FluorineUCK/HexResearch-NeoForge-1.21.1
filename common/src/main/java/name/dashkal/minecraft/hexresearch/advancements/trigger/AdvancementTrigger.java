@@ -1,54 +1,53 @@
 package name.dashkal.minecraft.hexresearch.advancements.trigger;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import name.dashkal.minecraft.hexresearch.HexResearch;
-import net.minecraft.advancements.critereon.AbstractCriterionTriggerInstance;
-import net.minecraft.advancements.critereon.DeserializationContext;
+import net.minecraft.advancements.critereon.ContextAwarePredicate;
 import net.minecraft.advancements.critereon.EntityPredicate;
 import net.minecraft.advancements.critereon.SimpleCriterionTrigger;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.GsonHelper;
 
-import javax.annotation.Nonnull;
+import java.util.Objects;
+import java.util.Optional;
 
-/** Advancement trigger that fires when an advancement is gained */
-public class AdvancementTrigger extends SimpleCriterionTrigger<AdvancementTrigger.Instance> {
-    public static final ResourceLocation ID = new ResourceLocation(HexResearch.MOD_ID, "advancement");
-
+/** Advancement trigger that fires when a configured advancement is completed. */
+public final class AdvancementTrigger extends SimpleCriterionTrigger<AdvancementTrigger.Instance> {
+    public static final ResourceLocation ID = HexResearch.id("advancement");
     public static final String TAG_ADVANCEMENT_ID = "advancement";
 
-    @Override @Nonnull
-    public ResourceLocation getId() {
-        return ID;
-    }
-
-    @Override @Nonnull
-    protected Instance createInstance(@Nonnull JsonObject jsonObject, @Nonnull EntityPredicate.Composite predicate, @Nonnull DeserializationContext deserializationContext) {
-        ResourceLocation advancement = new ResourceLocation(GsonHelper.getAsString(jsonObject, TAG_ADVANCEMENT_ID));
-        return new Instance(predicate, advancement);
+    @Override
+    public Codec<Instance> codec() {
+        return Instance.CODEC;
     }
 
     public void trigger(ServerPlayer player, ResourceLocation advancement) {
-        HexResearch.LOGGER.debug("AdvancementTrigger.trigger(" + player.getName().getString() + ", " + advancement + ")");
-        super.trigger(player, inst -> inst.test(advancement));
+        HexResearch.LOGGER.debug("AdvancementTrigger.trigger({}, {})", player.getName().getString(), advancement);
+        super.trigger(player, instance -> instance.matches(advancement));
     }
 
-    public static class Instance extends AbstractCriterionTriggerInstance {
-        private final ResourceLocation advancement;
+    public record Instance(
+            Optional<ContextAwarePredicate> player,
+            ResourceLocation advancement
+    ) implements SimpleInstance {
+        public static final Codec<Instance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(Instance::player),
+                ResourceLocation.CODEC.fieldOf(TAG_ADVANCEMENT_ID).forGetter(Instance::advancement)
+        ).apply(instance, Instance::new));
 
-        public Instance(EntityPredicate.Composite predicate, ResourceLocation advancement) {
-            super(AdvancementTrigger.ID, predicate);
-
-            if (advancement == null) {
-                throw new IllegalArgumentException("AdvancementTrigger "+ TAG_ADVANCEMENT_ID + " must not resolve to null");
-            }
-            this.advancement = advancement;
+        public Instance {
+            Objects.requireNonNull(player, "player");
+            Objects.requireNonNull(advancement, TAG_ADVANCEMENT_ID);
         }
 
-        private boolean test(ResourceLocation advancement) {
-            HexResearch.LOGGER.debug("AdvancementTrigger.Instance(" + this.advancement + ").test(" + advancement + ")");
-            return this.advancement.equals(advancement);
+        private boolean matches(ResourceLocation completedAdvancement) {
+            HexResearch.LOGGER.debug(
+                    "AdvancementTrigger.Instance({}).matches({})",
+                    advancement,
+                    completedAdvancement
+            );
+            return advancement.equals(completedAdvancement);
         }
     }
 }

@@ -1,0 +1,53 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "hexresearch"
+version = "${version}"
+displayName = "Hex Research"
+logoFile = "hex_research.png"
+authors = "Dashkal"
+description = '''
+An addon to Hex Casting that provides alternative ways to accomplish Hexcasting progression.
+'''
+displayURL = "https://dashkal16.github.io/HexResearch/v/latest/main/en_us"
+
+[[mixins]]
+config = "hexresearch-common.mixins.json"
+
+[[dependencies.hexresearch]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.111,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.hexresearch]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.hexresearch]]
+modId = "architectury"
+type = "required"
+versionRange = "[13.0.8,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.hexresearch]]
+modId = "kotlinforforge"
+type = "required"
+versionRange = "[5.12.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.hexresearch]]
+modId = "hexcasting"
+type = "required"
+versionRange = "[0.12.0-devel-pre-35,)"
+
+ordering = "AFTER"
+side = "BOTH"
