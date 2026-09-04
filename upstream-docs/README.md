@@ -1,14 +1,3 @@
-<!-- pre39-port-header:start -->
-> **NeoForge 1.21.1 · Hex Casting `0.12.0-devel-pre-39` · Branch `pre39`**
->
-> **原项目 / Upstream:** [https://github.com/dashkal16/HexResearch](https://github.com/dashkal16/HexResearch)  
-> **移植基准 / Base:** [`f5ca4b17e6603a8fc735290321b72c36c7252c2e`](https://github.com/dashkal16/HexResearch/commit/f5ca4b17e6603a8fc735290321b72c36c7252c2e)  
-> **许可证 / License:** [LICENSE.txt](LICENSE.txt)  
-> **文档 / Documentation:** [移植说明](PORTING.md) · [上游原始文档、署名与版权清单](UPSTREAM.md)
->
-> This is a NeoForge port maintained by FluorineUCK, not the original upstream release. Original authorship and license notices are retained. Loader/version/build instructions in inherited upstream text describe the upstream project; the current port baseline is listed above.
-<!-- pre39-port-header:end -->
-
 # Hex Research
 
 [![Build](https://github.com/dashkal16/HexResearch/actions/workflows/build_mod.yml/badge.svg?event=push)](https://github.com/dashkal16/HexResearch/actions/workflows/build_mod.yml)
